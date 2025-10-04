@@ -23,20 +23,32 @@ Aplicativo mobile desenvolvido em Python com o framework Kivy para ajudar no ger
 Inicialização:
 <img width="457" height="845" alt="image" src="https://github.com/user-attachments/assets/1f6d3589-db33-4c3b-9b64-027faceaa85e" />
 
+
+
 Respositório de produtos:
 <img width="454" height="843" alt="image" src="https://github.com/user-attachments/assets/78afca4b-1b97-479c-985a-2a521c3d2b8e" />
+
+
 
 Lixeira:
 <img width="458" height="843" alt="image" src="https://github.com/user-attachments/assets/e0fa24e7-a5e6-48e2-96a0-e16a348e8d89" />
 
+
+
 Status do produto quando vendido:
 <img width="459" height="843" alt="image" src="https://github.com/user-attachments/assets/5424c517-3882-4861-a688-e0a7cd1847cd" />
+
+
 
 Status de produto vencido:
 <img width="453" height="840" alt="image" src="https://github.com/user-attachments/assets/5f508144-70b5-43fb-8acf-aa4abb480219" />
 
+
+
 Adição de produtos:
 <img width="458" height="844" alt="image" src="https://github.com/user-attachments/assets/1a76c180-5ce3-4941-8445-f4c8f400b78d" />
+
+
 
 ## 🚀 Como Executar o Projeto
 
