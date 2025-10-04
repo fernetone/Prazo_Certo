@@ -1,0 +1,260 @@
+#:import dp kivy.metrics.dp
+
+# ================== REGRA PARA O WIDGET PRINCIPAL ==================
+<MainWidget>:
+    orientation: 'vertical'
+
+    # --- Barra de Navegação Superior ---
+    # Criei este BoxLayout para ser o menu superior do meu aplicativo.
+    BoxLayout:
+        size_hint_y: None
+        spacing: dp(10)
+        padding: dp(10)
+        # Um truque que fiz: escondo o menu quando a tela de splash está ativa.
+        height: 0 if root.ids.screen_manager.current == 'splash' else dp(50)
+        opacity: 0 if root.ids.screen_manager.current == 'splash' else 1
+        disabled: True if root.ids.screen_manager.current == 'splash' else False
+
+        # Usei o canvas para dar uma cor de fundo escura para a barra de navegação.
+        canvas.before:
+            Color:
+                rgba: 0.2, 0.2, 0.2, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Botões que eu uso para navegar entre as telas.
+        Button:
+            text: "Produtos"
+            on_press: root.ids.screen_manager.current = "produtos"
+        Button:
+            text: "Lixeira"
+            on_press: root.ids.screen_manager.current = "lixeira"
+        Button:
+            text: "Adicionar"
+            font_size: '14dp'
+            # Este botão chama a função do Python para abrir o popup de novo produto.
+            on_press: root.abrir_popup_novo_produto()
+
+    # --- Gerenciador de Telas ---
+    # O ScreenManager é o que eu uso para controlar qual tela está visível.
+    ScreenManager:
+        id: screen_manager
+
+        # --- Tela 1: Splash Screen ---
+        Screen:
+            name: "splash"
+            BoxLayout:
+                # Defini um fundo branco para a tela de splash.
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                # Aqui eu coloco a minha imagem de logo.
+                Image:
+                    source: "images/logo.png"
+                    allow_stretch: True
+                    keep_ratio: True
+
+        # --- Tela 2: Lista de Produtos ---
+        Screen:
+            name: "produtos"
+            BoxLayout:
+                orientation: "vertical"
+                canvas.before:
+                    Color:
+                        rgba: 0.95, 0.95, 0.95, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                # A barra de pesquisa que eu criei.
+                TextInput:
+                    id: barra_pesquisa
+                    size_hint_y: None
+                    height: dp(40)
+                    hint_text: "Pesquisar produto..."
+                    multiline: False
+                    padding: [10, 10]
+                    # Sempre que eu digito algo, a função 'filtrar_produtos' do meu Python é chamada.
+                    on_text: root.filtrar_produtos(self.text)
+
+                # A área de rolagem para a lista de produtos.
+                ScrollView:
+                    do_scroll_x: False
+                    # ESSA LINHA É MUITO IMPORTANTE: ela conecta a rolagem da tela com a minha função
+                    # de carregamento progressivo no Python. Assim eu consigo o "scroll infinito".
+                    on_scroll_y: root.verificar_rolagem(self.scroll_y)
+
+                    # O layout que vai conter todos os cards de produtos.
+                    BoxLayout:
+                        id: lista_produtos
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(10)
+                        padding: dp(10)
+
+        # --- Tela 3: Lixeira ---
+        Screen:
+            name: "lixeira"
+            # Usei um FloatLayout para poder colocar a imagem de marca d'água no fundo.
+            FloatLayout:
+                canvas.before:
+                    Color:
+                        rgba: 0.95, 0.95, 0.95, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                # A imagem de marca d'água da lixeira.
+                Image:
+                    source: 'images/lixeira_icone.png'
+                    size_hint: 0.4, 0.4
+                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                    color: 0, 0, 0, 0.15
+                    # Outro truque que fiz: a imagem só aparece se a lista de excluídos estiver vazia.
+                    opacity: 1 if not lista_excluidos.children else 0
+
+                # A área de rolagem para os produtos excluídos.
+                ScrollView:
+                    do_scroll_x: False
+                    BoxLayout:
+                        id: lista_excluidos
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(10)
+                        padding: dp(10)
+
+
+# ================== REGRA PARA O CARD DE PRODUTO ==================
+<ProductCard>:
+    size_hint_y: None
+    height: self.minimum_height
+
+    # Aqui no canvas.before eu defino o visual do card: a cor de fundo (que vem do Python) e os cantos arredondados.
+    canvas.before:
+        Color:
+            rgba: root.bg_color
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [dp(10)]
+
+    # O layout principal que organiza o conteúdo dentro do card.
+    BoxLayout:
+        id: box
+        orientation: "vertical"
+        padding: dp(12)
+        spacing: dp(8)
+        size_hint_y: None
+        height: self.minimum_height
+
+        # A parte de cima do card, com o nome do produto e o botão de excluir.
+        BoxLayout:
+            size_hint_y: None
+            height: dp(25)
+            Label:
+                text: root.nome
+                color: root.text_color
+                bold: True
+                halign: "left"
+                valign: "middle"
+                text_size: self.width, None
+            Button:
+                id: btn_x
+                text: "X"
+                size_hint: None, None
+                size: dp(25), dp(25)
+                on_press: root.excluir_produto()
+                background_color: (0.8, 0.2, 0.2, 1)
+
+        # Usei um GridLayout para alinhar os detalhes do produto de forma organizada.
+        GridLayout:
+            cols: 2
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(5)
+            row_force_default: True
+            row_default_height: dp(20)
+
+            # Uso [b]...[/b] para deixar o texto em negrito, por isso ativei o 'markup'.
+            Label:
+                text: "[b]Validade:[/b]"
+                markup: True
+                color: root.text_color
+                size_hint_x: 0.4
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+            Label:
+                text: root.validade
+                color: root.text_color
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+
+            Label:
+                text: "[b]Vence em:[/b]"
+                markup: True
+                color: root.text_color
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+            Label:
+                text: f"{root.dias} dias" if root.dias != "Vencido" else "Vencido"
+                color: root.text_color
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+
+            Label:
+                text: "[b]Permite troca:[/b]"
+                markup: True
+                color: root.text_color
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+            Label:
+                text: root.troca
+                color: root.text_color
+                text_size: self.width, None
+                halign: 'left'
+                valign: 'middle'
+
+        # Onde fica o switch de "Vendido".
+        BoxLayout:
+            size_hint_y: None
+            height: dp(30)
+            padding: [0, dp(5), 0, 0]
+            # Este layout só aparece se o produto não estiver excluído.
+            opacity: 0 if root.excluido else 1
+            Label:
+                text: "Vendido:"
+                color: root.text_color
+                halign: "left"
+                valign: "middle"
+                text_size: self.width, None
+
+            # Aqui eu substituí os botões de SIM/NÃO por um Switch, achei que ficou mais moderno.
+            Switch:
+                size_hint_x: None
+                width: dp(60)
+                # O switch começa ativo se o produto ainda 'não' foi vendido.
+                active: True if root.vendido == 'não' else False
+                # Dependendo se eu ligo ou desligo o switch, chamo a função de marcar ou desmarcar como vendido.
+                on_active: root.desmarcar_vendido() if self.active else root.marcar_vendido()
+
+        # Onde fica o botão de Restaurar.
+        BoxLayout:
+            size_hint_y: None
+            # Este layout só ocupa espaço e aparece se o produto estiver excluído.
+            height: dp(30) if root.excluido else 0
+            opacity: 1 if root.excluido else 0
+            Button:
+                text: "Restaurar Produto"
+                on_press: root.restaurar_produto()
+                disabled: not root.excluido
